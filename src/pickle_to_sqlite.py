@@ -47,17 +47,17 @@ def remove_rows_with_large_integers(df):
 
 def pickle_to_sqlite(pickle_file, sqlite_db):
     with open(pickle_file, 'rb') as f:
-        data = pickle.load(f)
-    if not isinstance(data, pd.DataFrame):
+        df = pickle.load(f)
+    if not isinstance(df, pd.DataFrame):
         raise ValueError("Pickle file must contain a pandas DataFrame.")
-    data.columns = [to_snake_case(col) for col in data.columns]
-    for col in data.columns:
-        data[col] = data[col].apply(convert_timestamp)
-    detect_large_integers(data)
-    data = remove_rows_with_large_integers(data)
+    df.columns = [to_snake_case(col) for col in df.columns]
+    for col in df.columns:
+        df[col] = df[col].apply(convert_timestamp)
+    detect_large_integers(df)
+    df = remove_rows_with_large_integers(df)
     conn = sqlite3.connect(sqlite_db)
     clear_sqlite_db(conn)
-    data.to_sql('data', conn, if_exists='replace', index=False)
+    df.to_sql('data', conn, if_exists='replace', index=False)
     conn.close()
 
 if __name__ == "__main__":
