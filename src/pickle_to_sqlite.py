@@ -31,17 +31,9 @@ def clear_sqlite_db(conn):
     conn.commit()
 
 
-def detect_large_integers(df):
-    threshold = 9223372036854775807
-    for col in df.columns:
-        for idx, val in df[col].items():
-            if isinstance(val, int) and abs(val) > threshold:
-                print(f"Large integer found at row {idx}, column '{col}': {val}")
-
-
 def remove_rows_with_large_integers(df):
     threshold = 9223372036854775807
-    mask = df.applymap(lambda x: isinstance(x, int) and abs(x) > threshold)
+    mask = df.apply(lambda col: col.map(lambda x: isinstance(x, int) and abs(x) > threshold))
     rows_to_drop = mask.any(axis=1)
     if rows_to_drop.any():
         indices = df[rows_to_drop].index.tolist()
@@ -59,7 +51,6 @@ def pickle_to_sqlite(pickle_file, sqlite_db):
     df.columns = [to_snake_case(col) for col in df.columns]
     for col in df.columns:
         df[col] = df[col].apply(convert_timestamp)
-    detect_large_integers(df)
     df = remove_rows_with_large_integers(df)
     conn = sqlite3.connect(sqlite_db)
     clear_sqlite_db(conn)
