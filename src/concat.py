@@ -2,10 +2,12 @@ import os
 import pandas as pd
 from tqdm import tqdm
 
+
 def clear_pickle_file(pickle_file):
     """Clears the pickle file by deleting it if it exists."""
     if os.path.exists(pickle_file):
         os.remove(pickle_file)
+
 
 def disambiguate_acc_columns(df_sheet):
     """For every column named 'ACC (IPTU)' in a sheet:
@@ -16,7 +18,9 @@ def disambiguate_acc_columns(df_sheet):
     for idx, col in enumerate(columns):
         if col == "ACC (IPTU)":
             series_col = df_sheet.iloc[:, idx]
-            valid = series_col.apply(lambda x: pd.isna(x) or not pd.isna(pd.to_numeric(x, errors="coerce")))
+            valid = series_col.apply(
+                lambda x: pd.isna(x) or not pd.isna(pd.to_numeric(x, errors="coerce"))
+            )
             fraction_numeric = valid.sum() / len(series_col)
             if fraction_numeric >= 0.99:
                 converted_series = pd.to_numeric(series_col, errors="coerce")
@@ -26,8 +30,11 @@ def disambiguate_acc_columns(df_sheet):
                 columns[idx] = "Descrição do padrão (IPTU)"
     df_sheet.columns = columns
     duplicates = [col for col in set(columns) if columns.count(col) > 1]
-    assert len(duplicates) == 0, f"Duplicate column names found in dataframe: {duplicates}"
+    assert (
+        len(duplicates) == 0
+    ), f"Duplicate column names found in dataframe: {duplicates}"
     return df_sheet
+
 
 def process_excel_file(file_path):
     base_name = os.path.splitext(os.path.basename(file_path))[0]
@@ -41,12 +48,14 @@ def process_excel_file(file_path):
             dfs_sheets.append(df_sheet)
     return dfs_sheets
 
+
 def process_specific_excel_files(file_paths, pickle_file):
     dfs_sheets = []
     for file_path in tqdm(file_paths):
         dfs_sheets.extend(process_excel_file(file_path))
     df_complete = pd.concat(dfs_sheets, ignore_index=True)
     df_complete.to_pickle(pickle_file)
+
 
 def process_excel_files(data_dir, pickle_file):
     file_paths = [
@@ -56,11 +65,13 @@ def process_excel_files(data_dir, pickle_file):
     ]
     process_specific_excel_files(file_paths, pickle_file)
 
+
 def main():
     data_dir = "data/"
     pickle_file = "real_estate_data.pkl"
     clear_pickle_file(pickle_file)
     process_excel_files(data_dir, pickle_file)
+
 
 if __name__ == "__main__":
     main()
