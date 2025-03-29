@@ -13,7 +13,7 @@ def load_data(db_path, query):
     return df
 
 
-def preprocess_data(df):
+def preprocess_original(df):
     # Rename and convert the transaction value column
     df = df.rename(
         columns={"valor_de_transacao_declarado_pelo_contribuinte": "transaction_value"}
@@ -26,16 +26,18 @@ def preprocess_data(df):
     df = df.dropna(subset=["transaction_value"])
     df = df[df["transaction_value"] <= 20_000_000]
 
-    # Preserve the cleaned original data for later display.
-    df_original = df.copy()
+    # Return the cleaned original data.
+    return df.copy()
 
+
+def transform_features(df_original):
     # Prepare transformed features for model training.
-    # Exclude the description's original text so that only numeric features remain.
-    df_features = df[["acc_iptu", "area_construida_m2", "cep"]].copy()
+    # Exclude the original description so that only numeric features remain.
+    df_features = df_original[["acc_iptu", "area_construida_m2", "cep"]].copy()
 
-    # Clean and label-encode the description column separately.
+    # Clean and label-encode the description column.
     descricao_clean = (
-        df["descricao_do_padrao_iptu"]
+        df_original["descricao_do_padrao_iptu"]
         .str.replace(r"[^\w\s]", "", regex=True)
         .str.replace(r"\s+", "", regex=True)
         .str.lower()
@@ -44,8 +46,10 @@ def preprocess_data(df):
     descricao_encoded = descricao_clean.astype("category").cat.codes
     df_features["descricao_do_padrao_iptu"] = descricao_encoded
 
-    y = df["transaction_value"]
-    return df_original, df_features, y
+    # The target variable.
+    y = df_original["transaction_value"]
+
+    return df_features, y
 
 
 def train_model(x_train, y_train):
@@ -89,11 +93,16 @@ def main():
     FROM data
     """
 
-    # Load data from the database and preprocess it,
-    # obtaining both the original and transformed feature DataFrames.
-    df_original, df_features, y = preprocess_data(load_data(db_path, query))
+    # Load data from the database.
+    df_loaded = load_data(db_path, query)
 
-    # Split the transformed data into training and testing sets
+    # Preprocess the original data.
+    df_original = preprocess_original(df_loaded)
+
+    # Transform features from the preprocessed original data.
+    df_features, y = transform_features(df_original)
+
+    # Split the transformed data into training and testing sets.
     x_train, x_test, y_train, y_test = train_test_split(
         df_features, y, test_size=0.2, random_state=42
     )
@@ -104,7 +113,7 @@ def main():
     rmse = evaluate_model(model, x_test, y_test)
     print(f"RMSE: {rmse}")
 
-    # Display sample test predictions using the original data
+    # Display sample test predictions using the original data.
     display_sample_predictions(model, x_test, df_original)
 
 
