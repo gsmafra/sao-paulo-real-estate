@@ -2,13 +2,13 @@ async function fetchRealEstateData(logradouroFilter = '', numeroFilter = '') {
     try {
         let url = '/real-estate';
         const params = new URLSearchParams();
-        if(logradouroFilter) {
+        if (logradouroFilter) {
             params.append('search', logradouroFilter);
         }
-        if(numeroFilter) {
+        if (numeroFilter) {
             params.append('numero', numeroFilter);
         }
-        if([...params].length > 0) {
+        if ([...params].length > 0) {
             url += '?' + params.toString();
         }
         const response = await fetch(url);
@@ -17,10 +17,10 @@ async function fetchRealEstateData(logradouroFilter = '', numeroFilter = '') {
         }
         const data = await response.json();
         const tbody = document.getElementById('real-estate-listings');
-        tbody.innerHTML = ''; // Clear existing table content
+        tbody.innerHTML = ''; // Clear table content
 
         if (data.length > 0) {
-            // Rebuild table headers
+            // Rebuild table headers.
             const headerRow = document.getElementById('table-headers');
             headerRow.innerHTML = '';
             Object.keys(data[0]).forEach(key => {
@@ -28,7 +28,7 @@ async function fetchRealEstateData(logradouroFilter = '', numeroFilter = '') {
                 th.textContent = key;
                 headerRow.appendChild(th);
             });
-            // Create table body dynamically
+            // Build table body.
             data.forEach(item => {
                 const row = document.createElement('tr');
                 Object.values(item).forEach(value => {
@@ -47,9 +47,24 @@ async function fetchRealEstateData(logradouroFilter = '', numeroFilter = '') {
 // When the page loads, fetch without filters.
 window.onload = () => fetchRealEstateData();
 
-// Add event listener to the filter button.
+// Filter button event listener.
 document.getElementById('filter-btn').addEventListener('click', () => {
     const logradouroFilter = document.getElementById('logradouro-filter').value;
     const numeroFilter = document.getElementById('numero-filter').value;
     fetchRealEstateData(logradouroFilter, numeroFilter);
+});
+
+// Add event listeners to inputs for Enter key.
+const logradouroInput = document.getElementById('logradouro-filter');
+const numeroInput = document.getElementById('numero-filter');
+
+[logradouroInput, numeroInput].forEach(input => {
+    input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            const logradouroFilter = logradouroInput.value;
+            const numeroFilter = numeroInput.value;
+            fetchRealEstateData(logradouroFilter, numeroFilter);
+        }
+    });
 });
