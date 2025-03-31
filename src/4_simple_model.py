@@ -14,40 +14,37 @@ def load_data(db_path, query):
 
 
 def preprocess_original(df):
-    # Rename and convert the transaction value column
-    df = df.rename(
-        columns={"valor_de_transacao_declarado_pelo_contribuinte": "transaction_value"}
+    # Convert the reported transaction value column to numeric.
+    df["reported_transaction_value"] = pd.to_numeric(
+        df["reported_transaction_value"], errors="coerce"
     )
-    df["transaction_value"] = pd.to_numeric(df["transaction_value"], errors="coerce")
 
-    n_invalid = df["transaction_value"].isna().sum()
+    n_invalid = df["reported_transaction_value"].isna().sum()
     if n_invalid:
-        print(f"Removed {n_invalid} rows due to non-convertible transaction_value.")
-    df = df.dropna(subset=["transaction_value"])
-    df = df[df["transaction_value"] <= 20_000_000]
+        print(f"Removed {n_invalid} rows due to non-convertible reported_transaction_value.")
+    df = df.dropna(subset=["reported_transaction_value"])
+    df = df[df["reported_transaction_value"] <= 20_000_000]
 
     # Return the cleaned original data.
     return df.copy()
 
 
 def transform_features(df_original):
-    # Prepare transformed features for model training.
-    # Exclude the original description so that only numeric features remain.
-    df_features = df_original[["acc_iptu", "area_construida_m2", "cep"]].copy()
+    # Prepare transformed features for model training using the SQL alias names.
+    df_features = df_original[["construction_year", "contructed_area", "area_code"]].copy()
 
-    # Clean and label-encode the description column.
-    descricao_clean = (
-        df_original["descricao_do_padrao_iptu"]
+    # Clean and label-encode the property description column.
+    property_desc_clean = (
+        df_original["property_description"]
         .str.replace(r"[^\w\s]", "", regex=True)
         .str.replace(r"\s+", "", regex=True)
         .str.lower()
     )
-    # Label encode the cleaned descriptions.
-    descricao_encoded = descricao_clean.astype("category").cat.codes
-    df_features["descricao_do_padrao_iptu"] = descricao_encoded
+    property_desc_encoded = property_desc_clean.astype("category").cat.codes
+    df_features["property_description"] = property_desc_encoded
 
-    # The target variable.
-    y = df_original["transaction_value"]
+    # The target variable is the reported transaction value.
+    y = df_original["reported_transaction_value"]
 
     return df_features, y
 
@@ -85,11 +82,11 @@ def main():
     db_path = "data/final/real_estate_data.db"
     query = """
     SELECT
-        acc_iptu,
-        area_construida_m2,
-        cep,
-        descricao_do_padrao_iptu,
-        valor_de_transacao_declarado_pelo_contribuinte
+        acc_iptu AS construction_year,
+        area_construida_m2 AS contructed_area,
+        cep AS area_code,
+        descricao_do_padrao_iptu AS property_description,
+        valor_de_transacao_declarado_pelo_contribuinte AS reported_transaction_value
     FROM data
     """
 
