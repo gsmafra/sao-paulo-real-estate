@@ -1,8 +1,15 @@
-async function fetchRealEstateData(filter = '') {
+async function fetchRealEstateData(logradouroFilter = '', numeroFilter = '') {
     try {
         let url = '/real-estate';
-        if (filter) {
-            url += `?search=${encodeURIComponent(filter)}`;
+        const params = new URLSearchParams();
+        if(logradouroFilter) {
+            params.append('search', logradouroFilter);
+        }
+        if(numeroFilter) {
+            params.append('numero', numeroFilter);
+        }
+        if([...params].length > 0) {
+            url += '?' + params.toString();
         }
         const response = await fetch(url);
         if (!response.ok) {
@@ -13,7 +20,7 @@ async function fetchRealEstateData(filter = '') {
         tbody.innerHTML = ''; // Clear existing table content
 
         if (data.length > 0) {
-            // Clear and rebuild table headers
+            // Rebuild table headers
             const headerRow = document.getElementById('table-headers');
             headerRow.innerHTML = '';
             Object.keys(data[0]).forEach(key => {
@@ -21,7 +28,6 @@ async function fetchRealEstateData(filter = '') {
                 th.textContent = key;
                 headerRow.appendChild(th);
             });
-
             // Create table body dynamically
             data.forEach(item => {
                 const row = document.createElement('tr');
@@ -38,11 +44,12 @@ async function fetchRealEstateData(filter = '') {
     }
 }
 
-// When the page loads, fetch without filter.
+// When the page loads, fetch without filters.
 window.onload = () => fetchRealEstateData();
 
 // Add event listener to the filter button.
 document.getElementById('filter-btn').addEventListener('click', () => {
-    const filterValue = document.getElementById('logradouro-filter').value;
-    fetchRealEstateData(filterValue);
+    const logradouroFilter = document.getElementById('logradouro-filter').value;
+    const numeroFilter = document.getElementById('numero-filter').value;
+    fetchRealEstateData(logradouroFilter, numeroFilter);
 });

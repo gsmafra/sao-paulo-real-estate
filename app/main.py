@@ -17,7 +17,8 @@ def index():
 def get_real_estate():
     # Path to the SQLite database
     db_path = 'data/final/real_estate_data.db'
-    search = request.args.get("search", "")  # Get filter value if exists
+    logradouro_search = request.args.get("search", "")
+    numero_search = request.args.get("numero", "")
 
     try:
         conn = sqlite3.connect(db_path)
@@ -34,11 +35,14 @@ def get_real_estate():
                 valor_de_transacao_declarado_pelo_contribuinte
             FROM data
             WHERE (? = '' OR nome_do_logradouro LIKE ?)
+              AND (? = '' OR numero = ?)
+            ORDER BY data_de_transacao DESC
             LIMIT 50
         """
-        # When search is empty, the condition (? = '') is true.
-        # Otherwise, we filter rows using a non‑exact match.
-        cursor.execute(query, (search, f"%{search}%"))
+        # Using the OR trick to enable/disable the filters:
+        # - If a filter is empty, the condition (? = '') becomes true.
+        # - Otherwise, it applies the filter (LIKE for logradouro and exact match for numero).
+        cursor.execute(query, (logradouro_search, f"%{logradouro_search}%", numero_search, numero_search))
         rows = cursor.fetchall()
 
         column_names = [description[0] for description in cursor.description]
