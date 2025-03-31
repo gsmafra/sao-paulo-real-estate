@@ -1,13 +1,13 @@
 SELECT
-    nome_do_logradouro,
-    numero,
-    cep,
-    data_de_transacao,
-    area_construida_m2,
-    acc_iptu,
-    valor_de_transacao_declarado_pelo_contribuinte
-FROM data
-WHERE (? = '' OR nome_do_logradouro LIKE ?)
-  AND (? = '' OR numero = ?)
-ORDER BY data_de_transacao DESC
+    street_name,
+    street_number,
+    area_code,
+    transaction_date,
+    built_area_sqm,
+    construction_year,
+    declared_transaction_value
+FROM transactions
+WHERE (? = '' OR street_name LIKE ?)
+  AND (? = '' OR street_number = ?)
+ORDER BY transaction_date DESC
 LIMIT 50;

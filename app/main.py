@@ -16,6 +16,7 @@ def handle_exceptions(f):
             return f(*args, **kwargs)
         # pylint: disable=W0718
         except Exception as e:
+            print(e)
             return jsonify({"error": str(e)}), 500
 
     return wrapper

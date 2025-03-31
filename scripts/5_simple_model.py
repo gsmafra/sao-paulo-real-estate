@@ -14,16 +14,18 @@ def load_data(db_path, query):
 
 
 def preprocess_original(df):
-    # Convert the reported transaction value column to numeric.
-    df["reported_transaction_value"] = pd.to_numeric(
-        df["reported_transaction_value"], errors="coerce"
+    # Convert the declared transaction value column to numeric.
+    df["declared_transaction_value"] = pd.to_numeric(
+        df["declared_transaction_value"], errors="coerce"
     )
 
-    n_invalid = df["reported_transaction_value"].isna().sum()
+    n_invalid = df["declared_transaction_value"].isna().sum()
     if n_invalid:
-        print(f"Removed {n_invalid} rows due to non-convertible reported_transaction_value.")
-    df = df.dropna(subset=["reported_transaction_value"])
-    df = df[df["reported_transaction_value"] <= 20_000_000]
+        print(
+            f"Removed {n_invalid} rows due to non-convertible declared_transaction_value."
+        )
+    df = df.dropna(subset=["declared_transaction_value"])
+    df = df[df["declared_transaction_value"] <= 20_000_000]
 
     # Return the cleaned original data.
     return df.copy()
@@ -31,11 +33,13 @@ def preprocess_original(df):
 
 def transform_features(df_original):
     # Prepare transformed features for model training using the SQL alias names.
-    df_features = df_original[["construction_year", "contructed_area", "area_code"]].copy()
+    df_features = df_original[
+        ["construction_year", "built_area_sqm", "area_code"]
+    ].copy()
 
     # Clean and label-encode the property description column.
     property_desc_clean = (
-        df_original["property_description"]
+        df_original["standard_type_description"]
         .str.replace(r"[^\w\s]", "", regex=True)
         .str.replace(r"\s+", "", regex=True)
         .str.lower()
@@ -43,8 +47,8 @@ def transform_features(df_original):
     property_desc_encoded = property_desc_clean.astype("category").cat.codes
     df_features["property_description"] = property_desc_encoded
 
-    # The target variable is the reported transaction value.
-    y = df_original["reported_transaction_value"]
+    # The target variable is the declared transaction value.
+    y = df_original["declared_transaction_value"]
 
     return df_features, y
 
@@ -82,12 +86,12 @@ def main():
     db_path = "data/final/real_estate_data.db"
     query = """
     SELECT
-        acc_iptu AS construction_year,
-        area_construida_m2 AS contructed_area,
-        cep AS area_code,
-        descricao_do_padrao_iptu AS property_description,
-        valor_de_transacao_declarado_pelo_contribuinte AS reported_transaction_value
-    FROM data
+        construction_year,
+        built_area_sqm,
+        area_code,
+        standard_type_description,
+        declared_transaction_value
+    FROM transactions
     """
 
     # Load data from the database.
