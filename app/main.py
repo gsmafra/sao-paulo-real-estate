@@ -1,10 +1,7 @@
 import sqlite3
 from functools import wraps
 
-from flask import Flask, Blueprint, jsonify, render_template, request
-
-app = Flask(__name__)
-app.template_folder = "templates"
+from flask import Blueprint, jsonify, render_template, request
 
 main_blueprint = Blueprint("main", __name__)
 
@@ -58,9 +55,3 @@ def get_real_estate():
 
     conn.close()
     return jsonify(results)
-
-
-app.register_blueprint(main_blueprint)
-
-if __name__ == "__main__":
-    app.run(debug=True)
