@@ -67,8 +67,8 @@ def process_excel_files(data_dir, pickle_file):
 
 
 def main():
-    data_dir = "data/"
-    pickle_file = "real_estate_data.pkl"
+    data_dir = "data/raw"
+    pickle_file = os.path.join("data/interim", "real_estate_data.pkl")
     clear_pickle_file(pickle_file)
     process_excel_files(data_dir, pickle_file)
 

@@ -1,3 +1,4 @@
+import os
 import pickle
 import re
 import sqlite3
@@ -33,9 +34,7 @@ def clear_sqlite_db(conn):
 
 def remove_rows_with_large_integers(df):
     threshold = 9223372036854775807
-    mask = df.apply(
-        lambda col: col.map(lambda x: isinstance(x, int) and abs(x) > threshold)
-    )
+    mask = df.apply(lambda col: col.map(lambda x: isinstance(x, int) and abs(x) > threshold))
     rows_to_drop = mask.any(axis=1)
     if rows_to_drop.any():
         indices = df[rows_to_drop].index.tolist()
@@ -61,8 +60,8 @@ def pickle_to_sqlite(pickle_file, sqlite_db):
 
 
 def main():
-    pickle_file = "real_estate_data.pkl"
-    sqlite_db = "real_estate_data.db"
+    pickle_file = os.path.join("data", "interim", "real_estate_data.pkl")
+    sqlite_db = os.path.join("data", "final", "real_estate_data.db")
     pickle_to_sqlite(pickle_file, sqlite_db)
     print(f"Data successfully converted from {pickle_file} to {sqlite_db}")
 

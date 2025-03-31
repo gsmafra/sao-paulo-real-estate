@@ -35,7 +35,7 @@ def main():
         "2018": f"{base_url}/itbi/guias_de_itbi_pagas_2018.xlsx",
         "2017": f"{base_url}/itbi/guias_de_itbi_pagas_2017.xlsx",
     }
-    download_dir = "./data"
+    download_dir = "./data/raw"
     download_files(links, download_dir)
 
 

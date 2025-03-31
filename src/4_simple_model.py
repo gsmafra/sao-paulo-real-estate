@@ -82,7 +82,7 @@ def display_sample_predictions(model, x_test, df_original, sample_size=5):
 
 
 def main():
-    db_path = "real_estate_data.db"
+    db_path = "data/final/real_estate_data.db"
     query = """
     SELECT
         acc_iptu,
