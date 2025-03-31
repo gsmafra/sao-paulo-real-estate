@@ -1,0 +1,20 @@
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+th {
+    background-color: #f4f4f4;
+}
+body {
+  background-color: #f0f0f0;
+  font-family: Arial, sans-serif;
+}
+.header {
+  color: #333;
+  text-align: center;
+}
