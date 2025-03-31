@@ -26,6 +26,12 @@ def index():
     return render_template("index.html")
 
 
+def load_query(filepath):
+    """Load the SQL template from a file."""
+    with open(filepath, "r", encoding="utf-8") as file:
+        return file.read()
+
+
 @main_blueprint.route("/real-estate")
 @handle_exceptions  # Wrap endpoint with error handling.
 def get_real_estate():
@@ -36,21 +42,10 @@ def get_real_estate():
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
-    query = """
-        SELECT
-            nome_do_logradouro,
-            numero,
-            cep,
-            data_de_transacao,
-            area_construida_m2,
-            acc_iptu,
-            valor_de_transacao_declarado_pelo_contribuinte
-        FROM data
-        WHERE (? = '' OR nome_do_logradouro LIKE ?)
-          AND (? = '' OR numero = ?)
-        ORDER BY data_de_transacao DESC
-        LIMIT 50
-    """
+    # Load the SQL template from an external file.
+    sql_filepath = "app/query.sql"
+    query = load_query(sql_filepath)
+
     cursor.execute(
         query,
         (logradouro_search, f"%{logradouro_search}%", numero_search, numero_search),
