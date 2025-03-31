@@ -1,3 +1,14 @@
+// Mapping of original column names to new display names.
+const columnMapping = {
+    "area_code": "CEP",
+    "built_area_sqm": "Area construída",
+    "construction_year": "Ano de construção",
+    "declared_transaction_value": "Valor da transação",
+    "street_name": "Logradouro",
+    "street_number": "Número",
+    "transaction_date": "Data da transação"
+};
+
 async function fetchRealEstateData(logradouroFilter = '', numeroFilter = '') {
     try {
         let url = '/real-estate';
@@ -20,19 +31,31 @@ async function fetchRealEstateData(logradouroFilter = '', numeroFilter = '') {
         tbody.innerHTML = ''; // Clear table content
 
         if (data.length > 0) {
-            // Rebuild table headers.
+            // Rebuild table headers using the friendly names.
             const headerRow = document.getElementById('table-headers');
             headerRow.innerHTML = '';
             Object.keys(data[0]).forEach(key => {
                 const th = document.createElement('th');
-                th.textContent = key;
+                // Use display name if available, otherwise use the key.
+                th.textContent = columnMapping[key] || key;
                 headerRow.appendChild(th);
             });
             // Build table body.
             data.forEach(item => {
                 const row = document.createElement('tr');
-                Object.values(item).forEach(value => {
+                Object.entries(item).forEach(([key, value]) => {
                     const td = document.createElement('td');
+                    if (key === 'area_code') {
+                        // Ensure the CEP has 8 digits and format as 5 digits-3 digits.
+                        let cepStr = value.toString().padStart(8, '0');
+                        value = `${cepStr.slice(0, 5)}-${cepStr.slice(5)}`;
+                    } else if (key === 'declared_transaction_value') {
+                        // Format the transaction value as R$ currency.
+                        value = new Intl.NumberFormat('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL'
+                        }).format(value);
+                    }
                     td.textContent = value;
                     row.appendChild(td);
                 });
@@ -57,7 +80,6 @@ document.getElementById('filter-btn').addEventListener('click', () => {
 // Add event listeners to inputs for Enter key.
 const logradouroInput = document.getElementById('logradouro-filter');
 const numeroInput = document.getElementById('numero-filter');
-
 [logradouroInput, numeroInput].forEach(input => {
     input.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
